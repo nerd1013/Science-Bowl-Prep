@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Science Bowl AI Coach</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#060b18;font-family:'Syne',sans-serif;color:#e2e8f0;overflow:hidden;}
+  ::-webkit-scrollbar{width:4px;background:#0d1526;}
+  ::-webkit-scrollbar-thumb{background:#1e3055;border-radius:2px;}
+  .app{display:flex;height:100vh;}
+  .sidebar{width:215px;background:#08101f;border-right:1px solid #1a2d4a;display:flex;flex-direction:column;padding:22px 0;flex-shrink:0;}
+  .sidebar-logo{padding:0 18px 18px;border-bottom:1px solid #1a2d4a;}
+  .logo-title{font-size:17px;font-weight:800;color:#00e5ff;letter-spacing:-0.5px;}
+  .logo-sub{font-size:10px;color:#3a5a7a;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+  .logo-badge{display:inline-block;font-size:8px;background:#0a1e38;color:#00e5ff;border:1px solid #1a3a5a;border-radius:3px;padding:1px 5px;margin-top:5px;letter-spacing:1px;}
+  .nav{padding:14px 10px;flex:1;}
+  .nav-btn{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:8px;margin-bottom:3px;background:none;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#3a5a7a;transition:all 0.2s;text-align:left;}
+  .nav-btn:hover{color:#a0b8d0;background:#0d1a2e;}
+  .nav-btn.active{color:#00e5ff;background:#0a1e38;}
+  .nav-icon{font-size:15px;width:20px;text-align:center;}
+  .weak-box{margin:0 10px 10px;padding:10px 12px;background:#150a05;border:1px solid #6b3015;border-radius:8px;font-size:11px;color:#e07040;}
+  .weak-box-title{font-weight:700;margin-bottom:4px;}
+  .db-box{margin:0 10px;padding:9px 12px;background:#060e1c;border:1px solid #1a3a5a;border-radius:8px;font-size:10px;color:#3a5a7a;line-height:1.6;}
+  .main{flex:1;overflow-y:auto;max-height:100vh;}
+  .view{padding:30px 36px;animation:fadeIn 0.3s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .spinner{width:36px;height:36px;border:3px solid #1e3055;border-top-color:#00e5ff;border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 14px;}
+  .spinner-sm{width:14px;height:14px;border:2px solid #1e3055;border-top-color:#00e5ff;border-radius:50%;animation:spin 0.9s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;}
+  .loading-wrap{text-align:center;padding:70px 0;color:#3a5a7a;font-size:14px;}
+  h1.page-title{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;}
+  .page-sub{color:#3a5a7a;font-size:14px;margin-bottom:28px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .stat-card{background:#0d1526;border:1px solid #1a2d4a;border-radius:12px;padding:20px 22px;}
+  .stat-val{font-size:28px;font-weight:800;color:#00e5ff;}
+  .stat-label{font-size:10px;color:#3a5a7a;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px;}
+  .section-label{font-size:11px;color:#3a5a7a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+  .subj-card{background:#0d1526;border:1px solid #1a2d4a;border-radius:12px;padding:18px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;text-align:left;width:100%;}
+  .subj-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,255,0.06);}
+  .subj-icon{font-size:26px;margin-bottom:8px;}
+  .subj-name{font-weight:700;font-size:13px;}
+  .subj-acc{font-size:11px;color:#3a5a7a;margin-top:3px;}
+  .bar-bg{height:3px;background:#1a2d4a;border-radius:2px;margin-top:8px;}
+  .bar-fill{height:100%;border-radius:2px;transition:width 0.5s;}
+  .btn-primary{background:#00e5ff;color:#060b18;border:none;border-radius:8px;padding:10px 22px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-primary:hover{background:#33ecff;transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+  .btn-ghost{background:#0d1526;color:#a0b8d0;border:1px solid #1a2d4a;border-radius:8px;padding:8px 16px;font-family:'Syne',sans-serif;font-weight:600;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .btn-ghost:hover{border-color:#00e5ff;color:#00e5ff;}
+  .btn-ghost.sel{border-color:#00e5ff;color:#00e5ff;background:#061828;}
+  .tag{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;}
+  .choice-btn{display:block;width:100%;text-align:left;background:#0d1526;border:1px solid #1a2d4a;border-radius:8px;padding:11px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#e2e8f0;cursor:pointer;margin-bottom:7px;transition:all 0.15s;}
+  .choice-btn:hover:not(:disabled){border-color:#00e5ff;background:#061828;}
+  .choice-btn.correct{border-color:#4ade80;background:#031508;color:#4ade80;}
+  .choice-btn.wrong{border-color:#f87171;background:#180303;color:#f87171;}
+  .choice-btn:disabled{cursor:default;}
+  .q-box{background:#0d1526;border:1px solid #1a2d4a;border-radius:12px;padding:22px 26px;margin-bottom:18px;font-family:'Space Mono',monospace;font-size:13px;line-height:1.8;}
+  .sa-input{width:100%;padding:12px 14px;background:#0d1526;border:2px solid #1a3a5a;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s;margin-bottom:10px;}
+  .sa-input:focus{border-color:#00e5ff;}
+  .flip-card{background:#0d1526;border:1px solid #1a2d4a;border-radius:16px;padding:50px 36px;text-align:center;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:center;transition:all 0.3s;max-width:580px;margin:0 auto;}
+  .flip-card.flipped{border-color:#00e5ff;background:#061828;}
+  .flip-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;}
+  .flip-text{font-family:'Space Mono',monospace;font-size:14px;line-height:1.6;}
+  .flip-topic{font-size:10px;color:#3a5a7a;margin-top:14px;}
+  .prog-row{display:flex;justify-content:space-between;font-size:11px;color:#3a5a7a;margin-bottom:5px;}
+  .prog-bg{height:3px;background:#1a2d4a;border-radius:2px;margin-bottom:20px;}
+  .prog-fill{height:100%;background:#a3e635;border-radius:2px;transition:width 0.3s;}
+  .lesson-section{background:#0d1526;border:1px solid #1a2d4a;border-radius:12px;padding:22px;margin-bottom:14px;}
+  .lesson-h{font-size:15px;font-weight:700;color:#00e5ff;margin-bottom:10px;}
+  .lesson-p{font-size:13px;line-height:1.75;color:#8aaccc;}
+  .term-chip{background:#060e1c;border:1px solid #1a2d4a;border-radius:5px;padding:4px 9px;font-size:11px;color:#a3e635;display:inline-block;margin:3px;}
+  .pq-item{background:#080f1c;border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+  .pq-q{font-family:'Space Mono',monospace;font-size:12px;margin-bottom:8px;}
+  .pq-a{color:#4ade80;font-size:12px;font-family:'Space Mono',monospace;margin-top:6px;}
+  .input-field{width:100%;padding:11px 14px;background:#0d1526;border:1px solid #1a2d4a;border-radius:8px;color:#e2e8f0;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+  .input-field:focus{border-color:#00e5ff;}
+  .stat-row{display:flex;align-items:center;gap:14px;margin-bottom:11px;}
+  .stat-row-icon{width:22px;text-align:center;}
+  .stat-row-name{width:115px;font-size:13px;font-weight:600;}
+  .stat-row-bar{flex:1;height:6px;background:#1a2d4a;border-radius:3px;}
+  .stat-row-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+  .stat-row-pct{width:52px;font-size:12px;font-family:'Space Mono',monospace;text-align:right;}
+  .stat-row-count{width:56px;font-size:11px;color:#3a5a7a;text-align:right;}
+  .ai-plan{background:#0d1526;border:1px solid #1a2d4a;border-radius:12px;padding:22px;max-width:580px;}
+  .ai-plan-title{font-size:14px;font-weight:700;color:#00e5ff;margin-bottom:10px;}
+  .ai-plan-text{font-size:13px;line-height:1.75;color:#8aaccc;white-space:pre-wrap;}
+  .result-box{padding:14px 18px;border-radius:10px;margin-bottom:14px;margin-top:16px;}
+  .result-box.ok{background:#031508;border:1px solid #1a5c28;}
+  .result-box.fail{background:#180303;border:1px solid #7c1212;}
+  .result-box.timeout{background:#0d0a00;border:1px solid #7a5a00;}
+  .result-title{font-weight:700;font-size:13px;margin-bottom:6px;}
+  .result-text{font-size:12px;line-height:1.7;color:#8aaccc;white-space:pre-wrap;margin-top:8px;}
+  .answer-reveal{font-family:'Space Mono',monospace;font-size:13px;color:#4ade80;font-weight:700;padding:6px 0 2px;}
+  .timer{font-size:30px;font-weight:800;font-family:'Space Mono',monospace;color:#00e5ff;}
+  .timer.urgent{color:#f87171;animation:pulse 0.5s infinite;}
+  .bonus-box{background:#060e1c;border:1px solid #1a3a5a;border-radius:10px;padding:16px 18px;margin-top:14px;}
+  .bonus-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#3a5a7a;margin-bottom:8px;}
+  .flex-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .flex-row-sb{display:flex;justify-content:space-between;align-items:center;}
+  .mt16{margin-top:16px;} .mt24{margin-top:24px;}
+  .mb12{margin-bottom:12px;} .mb20{margin-bottom:20px;} .mb28{margin-bottom:28px;}
+  .review-badge{font-size:9px;color:#e07040;font-weight:700;background:#150a05;padding:2px 6px;border-radius:4px;border:1px solid #6b3015;}
+  .weak-alert{padding:10px 14px;background:#150a05;border:1px solid #6b3015;border-radius:8px;font-size:12px;color:#e07040;margin-bottom:18px;}
+  .study-tip{padding:14px 18px;background:#061828;border:1px solid #1a2d4a;border-radius:10px;font-size:12px;color:#8aaccc;margin-top:14px;}
+  .study-tip strong{color:#00e5ff;}
+  .q-count-badge{font-size:10px;color:#2a4a6a;background:#06101e;border:1px solid #12253a;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  Science Bowl AI Coach
+//  Questions: built-in DOE-style bank (no external requests needed)
+//  AI: Anthropic API — no key required inside Claude.ai
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SUBJECTS = [
+  {id:"Biology",      icon:"🧬", hue:"#4ade80"},
+  {id:"Chemistry",    icon:"⚗️", hue:"#fb923c"},
+  {id:"Physics",      icon:"⚡", hue:"#38bdf8"},
+  {id:"Earth & Space",icon:"🌌", hue:"#a78bfa"},
+  {id:"Math",         icon:"∑",  hue:"#f472b6"},
+  {id:"Energy",       icon:"⚛️", hue:"#fbbf24"},
+];
+
+// ─── QUESTION BANK ────────────────────────────────────────────────────────────
+// Format: {subject, format:"MC"|"SA", topic, question, options{W,X,Y,Z}, answer, bonus, bonusAnswer}
+const QB = [
+
+// ── BIOLOGY ──
+{s:"Biology",f:"MC",t:"Cell Biology",q:"What organelle is responsible for producing ATP through cellular respiration?",o:{W:"Nucleus",X:"Mitochondria",Y:"Ribosome",Z:"Golgi apparatus"},a:"X",b:"What is the inner membrane of the mitochondria called?",ba:"Cristae"},
+{s:"Biology",f:"MC",t:"Genetics",q:"What term describes an organism that has two different alleles for a given gene?",o:{W:"Homozygous",X:"Haploid",Y:"Heterozygous",Z:"Diploid"},a:"Y",b:"What is the term for the physical expression of a genotype?",ba:"Phenotype"},
+{s:"Biology",f:"MC",t:"Cell Division",q:"During which phase of mitosis do chromosomes line up along the cell's equatorial plate?",o:{W:"Prophase",X:"Telophase",Y:"Anaphase",Z:"Metaphase"},a:"Z",b:"What enzyme unwinds the DNA double helix during replication?",ba:"Helicase"},
+{s:"Biology",f:"MC",t:"Evolution",q:"Which scientist is credited with developing the theory of evolution by natural selection?",o:{W:"Gregor Mendel",X:"Louis Pasteur",Y:"Charles Darwin",Z:"James Watson"},a:"Y",b:"What is the term for structures that have a common evolutionary origin but different functions?",ba:"Homologous structures"},
+{s:"Biology",f:"MC",t:"Ecology",q:"What type of symbiosis benefits one organism while the other is neither helped nor harmed?",o:{W:"Mutualism",X:"Parasitism",Y:"Commensalism",Z:"Competition"},a:"Y",b:"What is the term for the maximum population a habitat can sustain?",ba:"Carrying capacity"},
+{s:"Biology",f:"MC",t:"Biochemistry",q:"Which macromolecule serves as the primary long-term energy storage in animals?",o:{W:"Carbohydrates",X:"Proteins",Y:"Nucleic acids",Z:"Lipids"},a:"Z",b:"What is the monomer of proteins?",ba:"Amino acids"},
+{s:"Biology",f:"SA",t:"Photosynthesis",q:"What two products are released from the light-dependent reactions of photosynthesis that are used in the Calvin cycle?",a:"ATP and NADPH",b:"In what part of the chloroplast does the Calvin cycle take place?",ba:"Stroma"},
+{s:"Biology",f:"SA",t:"Cell Biology",q:"What type of transport moves molecules from low to high concentration, requiring energy?",a:"Active transport",b:"What protein forms channels in the cell membrane to allow water to pass through?",ba:"Aquaporin"},
+{s:"Biology",f:"MC",t:"Human Body",q:"Which part of the brain controls balance and coordination?",o:{W:"Cerebrum",X:"Medulla oblongata",Y:"Cerebellum",Z:"Hypothalamus"},a:"Y",b:"What hormone is released by the pancreas to lower blood sugar?",ba:"Insulin"},
+{s:"Biology",f:"MC",t:"Genetics",q:"What type of RNA carries amino acids to the ribosome during translation?",o:{W:"mRNA",X:"rRNA",Y:"snRNA",Z:"tRNA"},a:"Z",b:"How many codons code for the 20 standard amino acids?",ba:"61"},
+{s:"Biology",f:"SA",t:"Ecology",q:"What is the term for species that have a disproportionately large effect on their ecosystem relative to their abundance?",a:"Keystone species",b:"What trophic level do primary consumers occupy?",ba:"Second"},
+{s:"Biology",f:"MC",t:"Microbiology",q:"Which of the following is NOT a characteristic of prokaryotic cells?",o:{W:"Cell wall",X:"Ribosomes",Y:"Membrane-bound nucleus",Z:"Plasma membrane"},a:"Y",b:"What structure allows bacteria to exchange genetic material?",ba:"Pilus (or conjugation pilus)"},
+{s:"Biology",f:"SA",t:"Human Body",q:"What is the functional unit of the kidney?",a:"Nephron",b:"What valve separates the left atrium from the left ventricle?",ba:"Mitral (bicuspid) valve"},
+{s:"Biology",f:"MC",t:"Plants",q:"What tissue in plants is responsible for transporting water from roots to leaves?",o:{W:"Phloem",X:"Cambium",Y:"Epidermis",Z:"Xylem"},a:"Z",b:"What is the term for the opening on a leaf through which gas exchange occurs?",ba:"Stomata"},
+{s:"Biology",f:"MC",t:"Biochemistry",q:"What is the end product of glycolysis?",o:{W:"Acetyl-CoA",X:"Pyruvate",Y:"Citrate",Z:"Glucose-6-phosphate"},a:"X",b:"How many net ATP molecules are produced during glycolysis?",ba:"2"},
+
+// ── CHEMISTRY ──
+{s:"Chemistry",f:"MC",t:"Periodic Table",q:"What group of elements on the periodic table is characterized by having a full outer shell of electrons and being largely unreactive?",o:{W:"Alkali metals",X:"Halogens",Y:"Noble gases",Z:"Transition metals"},a:"Y",b:"What is the atomic number of the most abundant noble gas in Earth's atmosphere?",ba:"18 (Argon)"},
+{s:"Chemistry",f:"MC",t:"Bonding",q:"What type of bond is formed when electrons are shared unequally between two atoms of different electronegativities?",o:{W:"Nonpolar covalent",X:"Ionic",Y:"Metallic",Z:"Polar covalent"},a:"Z",b:"Which molecule has a bent geometry and is an example of polar covalent bonding?",ba:"Water (H₂O)"},
+{s:"Chemistry",f:"SA",t:"Stoichiometry",q:"What is the term for the minimum amount of energy required for a chemical reaction to occur?",a:"Activation energy",b:"What is the name of the energy diagram that shows the energy of reactants and products?",ba:"Reaction coordinate (or energy) diagram"},
+{s:"Chemistry",f:"MC",t:"Acids and Bases",q:"According to the Bronsted-Lowry definition, an acid is a substance that:",o:{W:"Accepts a proton",X:"Donates a proton",Y:"Accepts an electron pair",Z:"Donates an electron pair"},a:"X",b:"What is the pH of a solution with a hydroxide ion concentration of 10⁻⁴ M?",ba:"10"},
+{s:"Chemistry",f:"MC",t:"Thermodynamics",q:"Which thermodynamic quantity measures the disorder or randomness of a system?",o:{W:"Enthalpy",X:"Gibbs free energy",Y:"Entropy",Z:"Heat capacity"},a:"Y",b:"What is the sign of delta G for a spontaneous reaction at constant temperature and pressure?",ba:"Negative"},
+{s:"Chemistry",f:"SA",t:"Periodic Table",q:"What is the name of the energy required to remove an electron from a gaseous atom in its ground state?",a:"Ionization energy",b:"Which element has the highest electronegativity?",ba:"Fluorine"},
+{s:"Chemistry",f:"MC",t:"Gases",q:"Which gas law states that at constant temperature, the pressure and volume of a gas are inversely proportional?",o:{W:"Charles's Law",X:"Gay-Lussac's Law",Y:"Boyle's Law",Z:"Avogadro's Law"},a:"Y",b:"What is the value of the ideal gas constant R in units of L·atm/(mol·K)?",ba:"0.0821"},
+{s:"Chemistry",f:"MC",t:"Reactions",q:"In a redox reaction, the species that is oxidized:",o:{W:"Gains electrons",X:"Loses protons",Y:"Loses electrons",Z:"Gains protons"},a:"Y",b:"What is the term for the electrode at which oxidation occurs in an electrochemical cell?",ba:"Anode"},
+{s:"Chemistry",f:"SA",t:"Bonding",q:"What is the name of the theory that predicts molecular geometry based on electron pair repulsion?",a:"VSEPR theory",b:"What is the molecular geometry of methane (CH₄)?",ba:"Tetrahedral"},
+{s:"Chemistry",f:"MC",t:"Nuclear",q:"What type of radioactive decay involves the emission of a helium-4 nucleus?",o:{W:"Beta decay",X:"Gamma decay",Y:"Alpha decay",Z:"Positron emission"},a:"Y",b:"What is the term for the time it takes for half of a radioactive sample to decay?",ba:"Half-life"},
+{s:"Chemistry",f:"MC",t:"Solutions",q:"What is the term for the maximum amount of solute that can dissolve in a given amount of solvent at a specific temperature?",o:{W:"Molarity",X:"Saturation point",Y:"Solubility",Z:"Concentration"},a:"Y",b:"What is the molarity of a solution made by dissolving 2 moles of NaCl in 500 mL of water?",ba:"4 M"},
+{s:"Chemistry",f:"SA",t:"Kinetics",q:"What is the term for a substance that increases the rate of a chemical reaction without being consumed?",a:"Catalyst",b:"What is the name of the rate law where reaction rate depends only on the concentration of one reactant?",ba:"First-order reaction"},
+{s:"Chemistry",f:"MC",t:"Organic",q:"Which functional group is present in all alcohols?",o:{W:"Carbonyl",X:"Carboxyl",Y:"Amino",Z:"Hydroxyl"},a:"Z",b:"What type of organic reaction involves the addition of water across a double bond?",ba:"Hydration"},
+{s:"Chemistry",f:"SA",t:"Thermodynamics",q:"What law states that the total energy of the universe is constant?",a:"First law of thermodynamics (conservation of energy)",b:"What is Hess's law used to calculate?",ba:"The enthalpy change of a reaction"},
+{s:"Chemistry",f:"MC",t:"Atomic Structure",q:"Which model of the atom introduced the concept of quantized energy levels?",o:{W:"Thomson model",X:"Rutherford model",Y:"Dalton model",Z:"Bohr model"},a:"Z",b:"What is the maximum number of electrons that can occupy the third energy level?",ba:"18"},
+
+// ── PHYSICS ──
+{s:"Physics",f:"MC",t:"Mechanics",q:"What is the SI unit of force?",o:{W:"Joule",X:"Newton",Y:"Pascal",Z:"Watt"},a:"X",b:"What is the formula for kinetic energy?",ba:"KE = ½mv²"},
+{s:"Physics",f:"MC",t:"Electricity",q:"What law states that the current through a conductor is directly proportional to the voltage across it?",o:{W:"Faraday's Law",X:"Coulomb's Law",Y:"Ohm's Law",Z:"Kirchhoff's Law"},a:"Y",b:"What is the unit of electrical resistance?",ba:"Ohm"},
+{s:"Physics",f:"SA",t:"Waves",q:"What is the term for the number of complete wave cycles that pass a given point per second?",a:"Frequency",b:"What is the relationship between wave speed, frequency, and wavelength?",ba:"v = fλ"},
+{s:"Physics",f:"MC",t:"Optics",q:"What phenomenon causes light to bend when it passes from one medium to another?",o:{W:"Reflection",X:"Diffraction",Y:"Refraction",Z:"Polarization"},a:"Y",b:"What is the name of the law that relates the angles of incidence and refraction?",ba:"Snell's Law"},
+{s:"Physics",f:"MC",t:"Thermodynamics",q:"Which law of thermodynamics states that heat cannot spontaneously flow from a cooler body to a warmer body?",o:{W:"Zeroth Law",X:"First Law",Y:"Second Law",Z:"Third Law"},a:"Y",b:"What is the efficiency of a Carnot engine operating between 500 K and 300 K?",ba:"40%"},
+{s:"Physics",f:"SA",t:"Mechanics",q:"What is the term for the tendency of an object to resist changes in its state of motion?",a:"Inertia",b:"What is the SI unit of momentum?",ba:"kg·m/s"},
+{s:"Physics",f:"MC",t:"Electromagnetism",q:"What is the direction of the magnetic force on a positive charge moving to the right through a magnetic field pointing out of the page?",o:{W:"To the left",X:"Upward",Y:"Downward",Z:"Into the page"},a:"W",b:"What is the SI unit of magnetic flux density?",ba:"Tesla"},
+{s:"Physics",f:"MC",t:"Modern Physics",q:"What phenomenon demonstrated that light behaves as particles, for which Einstein received the Nobel Prize?",o:{W:"Compton scattering",X:"Photoelectric effect",Y:"Double-slit experiment",Z:"Blackbody radiation"},a:"X",b:"What is the formula for the energy of a photon?",ba:"E = hf"},
+{s:"Physics",f:"SA",t:"Mechanics",q:"What is the name of Newton's third law principle that states every action has an equal and opposite reaction?",a:"Law of action and reaction",b:"What is the formula for gravitational potential energy?",ba:"PE = mgh"},
+{s:"Physics",f:"MC",t:"Waves",q:"What type of wave requires a medium to travel through?",o:{W:"Electromagnetic waves",X:"Light waves",Y:"Mechanical waves",Z:"Radio waves"},a:"Y",b:"What is the speed of sound in air at room temperature, approximately?",ba:"343 m/s"},
+{s:"Physics",f:"MC",t:"Electricity",q:"Three resistors of 2Ω, 3Ω, and 6Ω are connected in parallel. What is the equivalent resistance?",o:{W:"11 Ω",X:"1 Ω",Y:"0.5 Ω",Z:"3 Ω"},a:"X",b:"What is the power dissipated by a 10Ω resistor carrying 2A of current?",ba:"40 W"},
+{s:"Physics",f:"SA",t:"Optics",q:"What is the critical angle phenomenon called when light traveling in a denser medium hits a boundary at an angle greater than the critical angle?",a:"Total internal reflection",b:"What type of lens is used to correct nearsightedness (myopia)?",ba:"Concave (diverging) lens"},
+{s:"Physics",f:"MC",t:"Mechanics",q:"A ball is thrown horizontally from a cliff. Which of the following best describes its motion?",o:{W:"Constant velocity in both directions",X:"Acceleration in both directions",Y:"Constant horizontal velocity and downward acceleration",Z:"Decreasing speed in both directions"},a:"Y",b:"What is the acceleration due to gravity on Earth's surface?",ba:"9.8 m/s²"},
+{s:"Physics",f:"SA",t:"Modern Physics",q:"What is the name of the principle stating that the position and momentum of a particle cannot both be known exactly at the same time?",a:"Heisenberg uncertainty principle",b:"What is the de Broglie wavelength formula?",ba:"λ = h/p"},
+{s:"Physics",f:"MC",t:"Mechanics",q:"What is the work done by a force of 10 N moving an object 5 meters in the direction of the force?",o:{W:"2 J",X:"15 J",Y:"50 J",Z:"500 J"},a:"Y",b:"A 2 kg object moving at 3 m/s has what kinetic energy?",ba:"9 J"},
+
+// ── EARTH & SPACE ──
+{s:"Earth & Space",f:"MC",t:"Geology",q:"What type of rock is formed from cooled magma or lava?",o:{W:"Sedimentary",X:"Metamorphic",Y:"Igneous",Z:"Composite"},a:"Y",b:"What is the name of the layer of Earth located between the crust and the outer core?",ba:"Mantle"},
+{s:"Earth & Space",f:"MC",t:"Astronomy",q:"What is the term for the point in a planet's orbit closest to the Sun?",o:{W:"Aphelion",X:"Perihelion",Y:"Apogee",Z:"Perigee"},a:"X",b:"What is the name of the law that states planets sweep equal areas in equal times?",ba:"Kepler's second law"},
+{s:"Earth & Space",f:"SA",t:"Atmosphere",q:"What is the name of the layer of Earth's atmosphere that contains the ozone layer?",a:"Stratosphere",b:"What gas makes up approximately 78% of Earth's atmosphere?",ba:"Nitrogen"},
+{s:"Earth & Space",f:"MC",t:"Plate Tectonics",q:"What type of plate boundary occurs when two plates move apart from each other?",o:{W:"Convergent",X:"Transform",Y:"Subduction",Z:"Divergent"},a:"Z",b:"What is the name of the supercontinent that existed approximately 300 million years ago?",ba:"Pangaea"},
+{s:"Earth & Space",f:"MC",t:"Astronomy",q:"What type of star is our Sun classified as on the Hertzsprung-Russell diagram?",o:{W:"Red giant",X:"White dwarf",Y:"Main sequence",Z:"Neutron star"},a:"Y",b:"What is the name of the galaxy that contains our solar system?",ba:"Milky Way"},
+{s:"Earth & Space",f:"SA",t:"Geology",q:"What is the term for the boundary between Earth's crust and mantle?",a:"Mohorovicic discontinuity (Moho)",b:"What scale measures the magnitude of earthquakes?",ba:"Richter scale (or moment magnitude scale)"},
+{s:"Earth & Space",f:"MC",t:"Oceanography",q:"What drives the thermohaline circulation of the world's oceans?",o:{W:"Wind patterns",X:"Earth's rotation",Y:"Differences in water temperature and salinity",Z:"Tidal forces"},a:"Y",b:"What is the deepest point in Earth's oceans?",ba:"Challenger Deep (Mariana Trench)"},
+{s:"Earth & Space",f:"MC",t:"Astronomy",q:"What phenomenon causes the apparent daily motion of stars across the sky?",o:{W:"Stars orbiting Earth",X:"Earth's revolution around the Sun",Y:"Earth's rotation on its axis",Z:"Precession of equinoxes"},a:"Y",b:"What is the term for the apparent path of the Sun across the sky over the course of a year?",ba:"Ecliptic"},
+{s:"Earth & Space",f:"SA",t:"Atmosphere",q:"What is the name of the phenomenon where heat is trapped in Earth's atmosphere by greenhouse gases?",a:"Greenhouse effect",b:"Which greenhouse gas is produced in the largest quantities by human activity?",ba:"Carbon dioxide (CO₂)"},
+{s:"Earth & Space",f:"MC",t:"Geology",q:"What type of seismic wave cannot travel through liquids?",o:{W:"P-waves",X:"Surface waves",Y:"Love waves",Z:"S-waves"},a:"Z",b:"What is the term for molten rock beneath Earth's surface?",ba:"Magma"},
+{s:"Earth & Space",f:"MC",t:"Astronomy",q:"What is the name of the force that causes the formation of stars from clouds of gas and dust?",o:{W:"Electromagnetic force",X:"Nuclear force",Y:"Gravity",Z:"Centripetal force"},a:"Y",b:"What is the approximate age of the universe?",ba:"13.8 billion years"},
+{s:"Earth & Space",f:"SA",t:"Geology",q:"What process breaks down rocks at Earth's surface through physical and chemical means?",a:"Weathering",b:"What is the term for the process by which sediment is carried away by water or wind?",ba:"Erosion"},
+{s:"Earth & Space",f:"MC",t:"Astronomy",q:"Which planet in our solar system has the most moons?",o:{W:"Jupiter",X:"Saturn",Y:"Uranus",Z:"Neptune"},a:"X",b:"What is the name of Saturn's largest moon, which has a thick atmosphere?",ba:"Titan"},
+{s:"Earth & Space",f:"SA",t:"Atmosphere",q:"What is the name of the boundary between the troposphere and stratosphere?",a:"Tropopause",b:"At what altitude approximately does the troposphere end?",ba:"12 km (approximately 8–15 km)"},
+{s:"Earth & Space",f:"MC",t:"Plate Tectonics",q:"What is formed when an oceanic plate subducts beneath a continental plate?",o:{W:"Mid-ocean ridge",X:"Rift valley",Y:"Transform fault",Z:"Volcanic arc"},a:"Z",b:"What is the name for a chain of volcanoes that forms above a subducting plate?",ba:"Island arc"},
+
+// ── MATH ──
+{s:"Math",f:"MC",t:"Algebra",q:"What is the solution to the equation 2x² - 8 = 0?",o:{W:"x = ±4",X:"x = ±2",Y:"x = ±8",Z:"x = ±16"},a:"X",b:"What is the discriminant of a quadratic equation ax² + bx + c = 0?",ba:"b² - 4ac"},
+{s:"Math",f:"MC",t:"Geometry",q:"What is the sum of interior angles of a hexagon?",o:{W:"540°",X:"900°",Y:"720°",Z:"1080°"},a:"Y",b:"What is the formula for the area of a regular polygon with n sides, side length s, and apothem a?",ba:"A = (1/2) × perimeter × apothem"},
+{s:"Math",f:"SA",t:"Calculus",q:"What is the derivative of sin(x)?",a:"cos(x)",b:"What is the integral of cos(x)?",ba:"sin(x) + C"},
+{s:"Math",f:"MC",t:"Probability",q:"A bag contains 4 red and 6 blue marbles. What is the probability of drawing two red marbles in a row without replacement?",o:{W:"2/15",X:"4/25",Y:"1/5",Z:"2/5"},a:"W",b:"What is the probability of rolling a sum of 7 with two standard dice?",ba:"1/6"},
+{s:"Math",f:"MC",t:"Trigonometry",q:"In a right triangle with legs of length 3 and 4, what is the sine of the angle opposite the leg of length 3?",o:{W:"3/4",X:"4/5",Y:"3/5",Z:"4/3"},a:"Y",b:"What is the value of cos(60°)?",ba:"1/2"},
+{s:"Math",f:"SA",t:"Algebra",q:"What is the name of the theorem that states: for a right triangle with legs a and b and hypotenuse c, a² + b² = c²?",a:"Pythagorean theorem",b:"What are the coordinates of the midpoint between (2,4) and (6,10)?",ba:"(4, 7)"},
+{s:"Math",f:"MC",t:"Calculus",q:"What is the limit of (sin x)/x as x approaches 0?",o:{W:"0",X:"Undefined",Y:"∞",Z:"1"},a:"Z",b:"What is the second derivative of f(x) = x³?",ba:"6x"},
+{s:"Math",f:"MC",t:"Statistics",q:"Which measure of central tendency is most affected by outliers?",o:{W:"Mode",X:"Median",Y:"Mean",Z:"Range"},a:"Y",b:"What is the term for the middle value in an ordered data set?",ba:"Median"},
+{s:"Math",f:"SA",t:"Number Theory",q:"What is the greatest common divisor of 48 and 36?",a:"12",b:"What is the least common multiple of 8 and 12?",ba:"24"},
+{s:"Math",f:"MC",t:"Geometry",q:"What is the volume of a sphere with radius 3?",o:{W:"12π",X:"18π",Y:"36π",Z:"27π"},a:"Y",b:"What is the surface area of a cube with side length 4?",ba:"96"},
+{s:"Math",f:"SA",t:"Algebra",q:"What is the sum of the infinite geometric series 1 + 1/2 + 1/4 + 1/8 + ...?",a:"2",b:"What is the formula for the sum of a finite geometric series with n terms, first term a, and ratio r?",ba:"S = a(1 - rⁿ)/(1 - r)"},
+{s:"Math",f:"MC",t:"Trigonometry",q:"What is the period of the function y = sin(2x)?",o:{W:"4π",X:"2π",Y:"π",Z:"π/2"},a:"Y",b:"What is the amplitude of y = 3cos(x)?",ba:"3"},
+{s:"Math",f:"SA",t:"Combinatorics",q:"How many ways can 5 people be arranged in a line?",a:"120",b:"How many ways can a committee of 3 be chosen from 7 people?",ba:"35"},
+{s:"Math",f:"MC",t:"Calculus",q:"What is the area under the curve y = x² from x = 0 to x = 3?",o:{W:"6",X:"9",Y:"3",Z:"27"},a:"X",b:"What integration technique is used for ∫x·sin(x)dx?",ba:"Integration by parts"},
+{s:"Math",f:"SA",t:"Algebra",q:"What is the value of log base 2 of 32?",a:"5",b:"What is the value of log base 10 of 1000?",ba:"3"},
+
+// ── ENERGY ──
+{s:"Energy",f:"MC",t:"Nuclear",q:"What type of nuclear reaction powers the Sun?",o:{W:"Fission",X:"Fusion",Y:"Radioactive decay",Z:"Combustion"},a:"X",b:"What is the fuel used in most current nuclear power plants?",ba:"Uranium-235"},
+{s:"Energy",f:"MC",t:"Solar",q:"What effect is used by photovoltaic cells to convert sunlight into electricity?",o:{W:"Thermoelectric effect",X:"Electromagnetic induction",Y:"Photoelectric effect",Z:"Piezoelectric effect"},a:"Y",b:"What is the approximate efficiency of a typical commercial silicon solar cell?",ba:"15–20%"},
+{s:"Energy",f:"SA",t:"Thermodynamics",q:"What device converts mechanical energy into electrical energy using electromagnetic induction?",a:"Generator",b:"What is the name of the law that describes energy conversion efficiency limits?",ba:"Second law of thermodynamics"},
+{s:"Energy",f:"MC",t:"Fossil Fuels",q:"What is the primary component of natural gas?",o:{W:"Ethane",X:"Propane",Y:"Methane",Z:"Butane"},a:"Y",b:"What is the term for the liquid mixture of hydrocarbons refined to make gasoline?",ba:"Petroleum (crude oil)"},
+{s:"Energy",f:"MC",t:"Renewable",q:"What type of energy is produced by harnessing the flow of water?",o:{W:"Geothermal",X:"Wind",Y:"Tidal",Z:"Hydroelectric"},a:"Z",b:"What is the name of the world's largest hydroelectric dam, located in China?",ba:"Three Gorges Dam"},
+{s:"Energy",f:"SA",t:"Electricity",q:"What is the name of the network of transmission lines that delivers electricity from power plants to homes?",a:"Electrical grid (or power grid)",b:"What is the formula for electrical power?",ba:"P = IV (or P = I²R or P = V²/R)"},
+{s:"Energy",f:"MC",t:"Nuclear",q:"In nuclear fission, when a uranium-235 nucleus absorbs a neutron, what happens?",o:{W:"It emits a photon",X:"It splits into smaller nuclei releasing energy",Y:"It undergoes beta decay",Z:"It becomes uranium-236 and is stable"},a:"X",b:"What is the term for the minimum mass of fissile material needed to sustain a nuclear chain reaction?",ba:"Critical mass"},
+{s:"Energy",f:"MC",t:"Renewable",q:"What is the most abundant source of renewable energy used for electricity generation worldwide?",o:{W:"Solar",X:"Wind",Y:"Hydropower",Z:"Geothermal"},a:"Y",b:"What is the Betz limit — the theoretical maximum efficiency of a wind turbine?",ba:"59.3% (16/27)"},
+{s:"Energy",f:"SA",t:"Thermodynamics",q:"What is the term for energy stored in chemical bonds that is released during combustion?",a:"Chemical energy",b:"What unit is used to measure energy content of food?",ba:"Calorie (or kilocalorie)"},
+{s:"Energy",f:"MC",t:"Solar",q:"What is the name of the process by which plants convert solar energy into chemical energy?",o:{W:"Chemosynthesis",X:"Fermentation",Y:"Cellular respiration",Z:"Photosynthesis"},a:"Z",b:"What pigment in plants primarily absorbs sunlight for photosynthesis?",ba:"Chlorophyll"},
+{s:"Energy",f:"SA",t:"Nuclear",q:"What is the term for the energy equivalent of mass described by Einstein's equation E = mc²?",a:"Mass-energy equivalence",b:"What is the speed of light used in the equation E = mc²?",ba:"3 × 10⁸ m/s"},
+{s:"Energy",f:"MC",t:"Fossil Fuels",q:"Which fossil fuel has the highest energy density per unit mass?",o:{W:"Coal",X:"Natural gas",Y:"Petroleum",Z:"Peat"},a:"X",b:"What is the main environmental concern associated with burning fossil fuels?",ba:"Carbon dioxide emissions and climate change"},
+{s:"Energy",f:"SA",t:"Renewable",q:"What is the term for electricity generated from the heat of the Earth's interior?",a:"Geothermal energy",b:"Which US state produces the most geothermal electricity?",ba:"California"},
+{s:"Energy",f:"MC",t:"Electricity",q:"What does AC stand for in the context of electrical power?",o:{W:"Absolute current",X:"Alternating current",Y:"Atomic charge",Z:"Ampere current"},a:"X",b:"What frequency is alternating current in the United States?",ba:"60 Hz"},
+{s:"Energy",f:"SA",t:"Nuclear",q:"What are the two byproducts released when uranium-235 undergoes fission with a neutron?",a:"Smaller nuclei (fission fragments) and neutrons (plus energy/gamma rays)",b:"What is the term for nuclear waste that remains radioactive for thousands of years?",ba:"High-level radioactive waste"},
+];
+
+// Index by subject for fast lookup
+const QB_BY_SUBJ = {};
+SUBJECTS.forEach(s => QB_BY_SUBJ[s.id] = []);
+QB.forEach(q => { if(QB_BY_SUBJ[q.s]) QB_BY_SUBJ[q.s].push(q); });
+
+// Track recently used question indices per subject to avoid repetition
+const recentlyUsed = {};
+SUBJECTS.forEach(s => recentlyUsed[s.id] = []);
+
+function getQuestion(subject) {
+  const pool = QB_BY_SUBJ[subject];
+  if (!pool || pool.length === 0) return null;
+  const used = recentlyUsed[subject];
+  // Prefer questions not used recently
+  const available = pool.map((_,i)=>i).filter(i => !used.includes(i));
+  const idx = available.length > 0
+    ? available[Math.floor(Math.random() * available.length)]
+    : Math.floor(Math.random() * pool.length);
+  // Keep a rolling window of recently used
+  recentlyUsed[subject].push(idx);
+  if (recentlyUsed[subject].length > Math.floor(pool.length * 0.6)) {
+    recentlyUsed[subject].shift();
+  }
+  const raw = pool[idx];
+  return {
+    format: raw.f === "MC" ? "Multiple Choice" : "Short Answer",
+    topic: raw.t,
+    question: raw.q,
+    options: raw.o || null,
+    answer: raw.a,
+    bonusQ: raw.b || null,
+    bonusA: raw.ba || null,
+  };
+}
+
+// ─── AI (no key needed in Claude.ai) ─────────────────────────────────────────
+const MODEL = "claude-sonnet-4-20250514";
+async function callClaude(system, user) {
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:MODEL, max_tokens:1000, system,
+        messages:[{role:"user",content:user}]})
+    });
+    const d = await res.json();
+    return d.content?.[0]?.text ?? "";
+  } catch(e) { return ""; }
+}
+async function callJSON(system, user) {
+  const raw = await callClaude(
+    system + "\n\nRESPOND WITH VALID JSON ONLY. No markdown, no backticks.", user);
+  try { return JSON.parse(raw.replace(/```(?:json)?|```/g,"").trim()); }
+  catch { return null; }
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  view:"dashboard", history:[],
+  pr:{subj:null,q:null,loading:false,selected:null,saInput:"",revealed:false,explanation:null,timeLeft:0,score:{c:0,t:0}},
+  fc:{subj:null,cards:[],idx:0,flipped:false,loading:false,known:new Set()},
+  ls:{subj:"Biology",goal:"",lesson:null,loading:false},
+  st:{plan:null,loading:false},
+};
+let timerInterval = null;
+function pct(c,t){return t?Math.round(c/t*100):null;}
+function getStats(){const s={};SUBJECTS.forEach(sub=>s[sub.id]={c:0,t:0});state.history.forEach(h=>{if(s[h.subject]){s[h.subject].t++;if(h.correct)s[h.subject].c++;}});return s;}
+function getWeak(stats){return SUBJECTS.filter(s=>{const st=stats[s.id];return st.t>=2&&pct(st.c,st.t)<60;}).map(s=>s.id);}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  const stats=getStats(),weak=getWeak(stats);
+  document.getElementById("root").innerHTML=buildApp(stats,weak);
+  attachHandlers(stats,weak);
+}
+function buildApp(stats,weak){
+  return `<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">Science Bowl</div>
+      <div class="logo-sub">AI Coach</div>
+      <div class="logo-badge">${QB.length} DOE-STYLE QUESTIONS</div>
+    </div>
+    <nav class="nav">
+      ${[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"practice",icon:"⚡",label:"Practice Round"},
+         {id:"flashcards",icon:"🃏",label:"Flashcards"},{id:"lesson",icon:"📖",label:"Lessons"},
+         {id:"stats",icon:"📊",label:"My Stats"}]
+        .map(n=>`<button class="nav-btn${state.view===n.id?" active":""}" data-nav="${n.id}">
+          <span class="nav-icon">${n.icon}</span>${n.label}</button>`).join("")}
+    </nav>
+    ${weak.length?`<div class="weak-box"><div class="weak-box-title">⚠ Needs Review</div>
+      ${weak.map(w=>`<div style="opacity:.75;font-size:10px;margin-top:2px">${w}</div>`).join("")}</div>`:""}
+    <div class="db-box">Built-in question bank<br>${QB.length} questions total<br>AI coaching via Claude</div>
+  </aside>
+  <main class="main">${buildView(stats,weak)}</main>
+  </div>`;
+}
+function buildView(stats,weak){
+  switch(state.view){
+    case"dashboard":  return buildDashboard(stats,weak);
+    case"practice":   return buildPractice(stats);
+    case"flashcards": return buildFlashcards();
+    case"lesson":     return buildLesson(weak);
+    case"stats":      return buildStats(stats,weak);
+    default:return"";
+  }
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function buildDashboard(stats,weak){
+  const totalQ=state.history.length,totalC=state.history.filter(h=>h.correct).length,overall=pct(totalC,totalQ);
+  return `<div class="view">
+  <h1 class="page-title">Welcome back, <span style="color:#00e5ff">Scholar</span></h1>
+  <p class="page-sub">Powered by ${QB.length} Science Bowl questions + AI coaching. No sign-in required.</p>
+  <div class="grid3 mb28">
+    <div class="stat-card"><div class="stat-val">${totalQ||"—"}</div><div class="stat-label">Questions Answered</div></div>
+    <div class="stat-card"><div class="stat-val">${overall!=null?overall+"%":"—"}</div><div class="stat-label">Overall Accuracy</div></div>
+    <div class="stat-card"><div class="stat-val" style="${weak.length?"color:#fb923c":""}">${weak.length||"🎉"}</div><div class="stat-label">Weak Areas</div></div>
+  </div>
+  <div class="section-label mb12">Subjects</div>
+  <div class="grid3 mb28">
+    ${SUBJECTS.map(s=>{
+      const st=stats[s.id],p=pct(st.c,st.t),isW=weak.includes(s.id);
+      return `<div class="subj-card" data-nav="practice" style="border:1px solid ${isW?"#6b3015":"#1a2d4a"}">
+        <div class="flex-row-sb"><div class="subj-icon">${s.icon}</div>${isW?`<span class="review-badge">REVIEW</span>`:""}</div>
+        <div class="subj-name" style="color:${s.hue}">${s.id}</div>
+        <div class="q-count-badge" style="margin-top:4px">${QB_BY_SUBJ[s.id].length} questions</div>
+        ${p!=null?`<div class="bar-bg" style="margin-top:8px"><div class="bar-fill" style="width:${p}%;background:${s.hue}"></div></div>
+          <div class="subj-acc" style="color:${s.hue};margin-top:3px">${p}% accuracy</div>`
+        :`<div class="subj-acc">No data yet</div>`}
+      </div>`;
+    }).join("")}
+  </div>
+  <div class="section-label mb12">Quick Start</div>
+  <div class="flex-row">
+    <button class="btn-primary" data-nav="practice">⚡ Practice Round</button>
+    <button class="btn-ghost" data-nav="lesson">📖 Generate Lesson</button>
+    <button class="btn-ghost" data-nav="flashcards">🃏 Flashcards</button>
+  </div>
+  </div>`;
+}
+
+// ─── PRACTICE ─────────────────────────────────────────────────────────────────
+function buildPractice(stats){
+  const pr=state.pr;
+  if(!pr.subj) return buildSubjectPicker("practice",stats);
+  const subj=SUBJECTS.find(s=>s.id===pr.subj);
+  const answered=pr.selected!==null||pr.revealed;
+  let body="";
+  if(!pr.q){
+    body=`<div style="text-align:center;padding:60px 0">
+      <div style="font-size:56px;margin-bottom:16px">${subj.icon}</div>
+      <p style="color:#3a5a7a;font-size:14px;margin-bottom:6px">${QB_BY_SUBJ[pr.subj].length} questions available in this subject.</p>
+      <p style="color:#2a4a6a;font-size:12px;font-family:'Space Mono',monospace;margin-bottom:28px">Multiple Choice: 5s timer &nbsp;·&nbsp; Short Answer: type your response</p>
+      <button class="btn-primary" id="startQ" style="font-size:15px;padding:13px 36px">⚡ Start Question</button>
+    </div>`;
+  } else {
+    const q=pr.q,isMC=(q.format==="Multiple Choice");
+    body=`<div>
+      <div class="flex-row-sb mb20">
+        <div class="flex-row">
+          <span class="tag" style="background:#061828;border:1px solid #1a2d4a;color:#00e5ff">${q.format}</span>
+          <span class="tag" style="background:#061828;border:1px solid #1a2d4a;color:#3a5a7a">${q.topic}</span>
+        </div>
+        ${!answered&&isMC&&pr.timeLeft>0?`<div class="timer${pr.timeLeft<=2?" urgent":""}">${pr.timeLeft}s</div>`:""}
+      </div>
+      <div class="q-box">${q.question}</div>
+      ${isMC&&q.options
+        ?Object.entries(q.options).map(([k,v])=>{
+            let cls="choice-btn";
+            if(answered){if(k===q.answer)cls+=" correct";else if(k===pr.selected)cls+=" wrong";}
+            return `<button class="${cls}" ${answered?"disabled":""} data-choice="${k}"><b>${k})</b> ${v}</button>`;
+          }).join("")
+        :!answered
+          ?`<input class="sa-input" id="saInput" placeholder="Type your answer and press Enter…" value="${pr.saInput||""}"/>
+            <div class="flex-row">
+              <button class="btn-primary" id="submitSA">Submit Answer</button>
+              <button class="btn-ghost" id="skipSA">Skip / Reveal</button>
+            </div>`
+          :""}
+      ${answered?buildExplanation(q):""}
+    </div>`;
+  }
+  return `<div class="view">
+  <div class="flex-row-sb mb28">
+    <div class="flex-row">
+      <button class="btn-ghost" id="backSubj">← Back</button>
+      <span style="font-size:20px">${subj.icon}</span>
+      <h1 style="font-size:20px;font-weight:800;color:${subj.hue}">${pr.subj}</h1>
+    </div>
+    <div style="font-size:13px;color:#3a5a7a">Session: <span style="color:#4ade80;font-weight:700">${pr.score.c}</span>/${pr.score.t}</div>
+  </div>
+  ${body}
+  </div>`;
+}
+
+function buildExplanation(q){
+  const pr=state.pr,isMC=(q.format==="Multiple Choice");
+  let ok,cls,title;
+  if(pr.revealed){ok=false;cls="timeout";title="👁 Answer Revealed";}
+  else if(pr.selected==="TIMEOUT"){ok=false;cls="timeout";title="⏰ Time's Up!";}
+  else{ok=isMC?(pr.selected===q.answer):checkSA(pr.selected,q.answer);cls=ok?"ok":"fail";title=ok?"✓ Correct!":"✗ Incorrect";}
+  return `<div class="result-box ${cls}">
+    <div class="result-title" style="color:${ok?"#4ade80":cls==="timeout"?"#fbbf24":"#f87171"}">${title}</div>
+    <div class="answer-reveal">Correct answer: ${isMC?q.answer+") "+(q.options?.[q.answer]||""):q.answer}</div>
+    ${pr.explanation
+      ?`<div class="result-text">${pr.explanation}</div>`
+      :`<div class="result-text" style="color:#3a5a7a"><span class="spinner-sm"></span>AI is explaining…</div>`}
+  </div>
+  ${q.bonusQ?`<div class="bonus-box">
+    <div class="bonus-label">Bonus Question</div>
+    <div style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.7;margin-bottom:8px">${q.bonusQ}</div>
+    <button class="btn-ghost" id="showBonus" style="font-size:11px">Show Bonus Answer</button>
+    <div id="bonusAns" style="display:none;color:#a3e635;font-family:'Space Mono',monospace;font-size:12px;margin-top:8px">→ ${q.bonusA}</div>
+  </div>`:""}
+  <div class="flex-row mt16"><button class="btn-primary" id="nextQ">Next Question →</button></div>`;
+}
+
+function checkSA(given,correct){
+  if(!given||!correct) return false;
+  const n=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+  const g=n(given),c=n(correct);
+  return g===c||c.includes(g)||(g.length>3&&c.startsWith(g));
+}
+
+function buildSubjectPicker(mode,stats){
+  return `<div class="view">
+  <h1 class="page-title">${mode==="practice"?"Practice Round":"Flashcards"}</h1>
+  <p class="page-sub">${mode==="practice"
+    ?"Pick a subject. Multiple Choice has a 5-second timer. Short Answer — type your response."
+    :"AI-generated flashcards covering key Science Bowl topics."}</p>
+  <div class="grid3" style="max-width:560px">
+    ${SUBJECTS.map(s=>{
+      const st=stats?.[s.id],p=st?pct(st.c,st.t):null;
+      return `<button class="subj-card" data-pick="${s.id}">
+        <div class="subj-icon">${s.icon}</div>
+        <div class="subj-name" style="color:${s.hue}">${s.id}</div>
+        <div class="q-count-badge" style="margin-top:4px">${QB_BY_SUBJ[s.id]?.length||0} questions</div>
+        <div class="subj-acc">${p!=null?p+"% accuracy":"Not started"}</div>
+      </button>`;
+    }).join("")}
+  </div>
+  ${mode==="practice"?`<button class="btn-ghost mt16" id="randSubj">🎲 Random Subject</button>`:""}
+  </div>`;
+}
+
+// ─── FLASHCARDS ───────────────────────────────────────────────────────────────
+function buildFlashcards(){
+  const fc=state.fc;
+  if(!fc.subj) return buildSubjectPicker("flashcards",null);
+  const subj=SUBJECTS.find(s=>s.id===fc.subj);
+  const card=fc.cards[fc.idx];
+  const progress=fc.cards.length?Math.round(fc.known.size/fc.cards.length*100):0;
+  let body="";
+  if(fc.loading){body=`<div class="loading-wrap"><div class="spinner"></div>Generating flashcards…</div>`;}
+  else if(card){
+    body=`<div>
+      <div class="prog-row"><span>Card ${fc.idx+1} of ${fc.cards.length}</span><span>${progress}% mastered</span></div>
+      <div class="prog-bg"><div class="prog-fill" style="width:${progress}%"></div></div>
+      <div class="flip-card${fc.flipped?" flipped":""}" id="flipCard">
+        ${fc.flipped
+          ?`<div class="flip-label" style="color:#00e5ff">Answer</div><div class="flip-text" style="color:#00e5ff">${card.back}</div>`
+          :`<div class="flip-label" style="color:#3a5a7a">Question — tap to reveal</div><div class="flip-text">${card.front}</div><div class="flip-topic">${card.topic||""}</div>`}
+      </div>
+      <div class="flex-row mt24" style="justify-content:center;gap:12px">
+        <button class="btn-ghost" id="fcWrong" style="color:#f87171;border-color:#7c1212">✗ Still Learning</button>
+        <button class="btn-ghost" id="fcRight" style="color:#4ade80;border-color:#1a5c28">✓ Got It</button>
+      </div>
+      <div style="text-align:center;margin-top:14px"><button class="btn-ghost" id="fcRegen" style="font-size:11px">↻ New Set</button></div>
+    </div>`;
+  } else {
+    body=`<div class="loading-wrap" style="color:#f87171">Could not generate cards.<div style="margin-top:12px"><button class="btn-ghost" id="fcRegen">Retry</button></div></div>`;
+  }
+  return `<div class="view">
+  <div class="flex-row mb28">
+    <button class="btn-ghost" id="fcBack">← Back</button>
+    <span style="font-size:20px">${subj.icon}</span>
+    <h1 style="font-size:20px;font-weight:800;color:${subj.hue}">${fc.subj} Flashcards</h1>
+    <span style="margin-left:auto;font-size:12px;color:#3a5a7a">${fc.known.size}/${fc.cards.length} mastered</span>
+  </div>
+  ${body}
+  </div>`;
+}
+
+// ─── LESSON ───────────────────────────────────────────────────────────────────
+function buildLesson(weak){
+  const ls=state.ls;
+  let body="";
+  if(ls.loading){body=`<div class="loading-wrap"><div class="spinner"></div>Building your personalized lesson…</div>`;}
+  else if(!ls.lesson){
+    body=`<div style="max-width:500px">
+      <div class="mb20">
+        <div class="section-label mb12">Subject</div>
+        <div class="flex-row" style="gap:7px">
+          ${SUBJECTS.map(s=>`<button class="btn-ghost${ls.subj===s.id?" sel":""}" data-ls-subj="${s.id}">${s.icon} ${s.id}</button>`).join("")}
+        </div>
+      </div>
+      <div class="mb20">
+        <div class="section-label mb12">Your Goal <span style="color:#1a2d4a;font-weight:400">(optional)</span></div>
+        <input class="input-field" id="goalInput" value="${ls.goal}" placeholder="e.g. Understand thermodynamics, master stoichiometry…"/>
+      </div>
+      ${weak.length?`<div class="weak-alert">⚠ Based on your practice, consider: <strong>${weak.join(", ")}</strong></div>`:""}
+      <button class="btn-primary" id="genLesson" ${!ls.subj?"disabled":""}>📖 Generate Lesson</button>
+    </div>`;
+  } else {
+    const l=ls.lesson;
+    body=`<div style="max-width:680px">
+      <div class="flex-row-sb mb20">
+        <div><h2 style="font-size:22px;font-weight:800">${l.title||""}</h2>
+        <p style="color:#00e5ff;font-size:13px;margin-top:5px">${l.objective||""}</p></div>
+        <button class="btn-ghost" id="newLesson">New Lesson</button>
+      </div>
+      ${(l.sections||[]).map(sec=>`<div class="lesson-section">
+        <div class="lesson-h">${sec.heading}</div>
+        <p class="lesson-p">${sec.content}</p>
+        ${sec.keyTerms?.length?`<div style="margin-top:12px">${sec.keyTerms.map(t=>`<span class="term-chip">${t}</span>`).join("")}</div>`:""}
+      </div>`).join("")}
+      ${l.practiceQuestions?.length?`<div class="lesson-section" style="border-color:#1a5c28">
+        <div class="lesson-h">Practice Questions</div>
+        ${l.practiceQuestions.map((pq,i)=>`<div class="pq-item">
+          <div class="pq-q">${pq.q}</div>
+          <div id="pq-${i}" style="display:none" class="pq-a">→ ${pq.a}</div>
+          <button class="btn-ghost" style="font-size:11px;padding:4px 10px" data-show-pq="${i}">Show Answer</button>
+        </div>`).join("")}
+      </div>`:""}
+      ${l.studyTip?`<div class="study-tip">💡 <strong>Study Tip:</strong> ${l.studyTip}</div>`:""}
+    </div>`;
+  }
+  return `<div class="view">
+  <h1 class="page-title">AI Lessons</h1>
+  <p class="page-sub">Personalized lessons tailored to your goals and weak areas.</p>
+  ${body}
+  </div>`;
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function buildStats(stats,weak){
+  const totalQ=state.history.length,totalC=state.history.filter(h=>h.correct).length,st=state.st;
+  return `<div class="view">
+  <h1 class="page-title">My Stats</h1>
+  <p class="page-sub">Track your performance across all subjects.</p>
+  <div class="grid2 mb28" style="max-width:460px">
+    <div class="stat-card"><div class="stat-val">${totalQ||0}</div><div class="stat-label">Questions Answered</div></div>
+    <div class="stat-card"><div class="stat-val">${pct(totalC,totalQ)!=null?pct(totalC,totalQ)+"%":"—"}</div><div class="stat-label">Overall Accuracy</div></div>
+  </div>
+  <div class="section-label mb12">By Subject</div>
+  <div style="max-width:560px;margin-bottom:28px">
+    ${SUBJECTS.map(s=>{
+      const sst=stats[s.id],p=pct(sst.c,sst.t),isW=weak.includes(s.id);
+      return `<div class="stat-row">
+        <div class="stat-row-icon">${s.icon}</div>
+        <div class="stat-row-name" style="color:${isW?"#fb923c":"#e2e8f0"}">${s.id}</div>
+        <div class="stat-row-bar"><div class="stat-row-fill" style="width:${p||0}%;background:${isW?"#fb923c":s.hue}"></div></div>
+        <div class="stat-row-pct" style="color:${p==null?"#3a5a7a":isW?"#fb923c":s.hue}">${p!=null?p+"%":"—"}</div>
+        <div class="stat-row-count">${sst.t?sst.c+"/"+sst.t:"No data"}</div>
+      </div>`;
+    }).join("")}
+  </div>
+  ${!st.plan&&!st.loading?`<button class="btn-primary" id="getAIPlan" ${totalQ===0?"disabled":""}>🤖 Get AI Study Plan</button>
+    ${totalQ===0?`<p style="font-size:12px;color:#3a5a7a;margin-top:8px">Answer some questions to unlock your personalized plan.</p>`:""}`:""} 
+  ${st.loading?`<div style="color:#3a5a7a;font-size:13px;display:flex;align-items:center;gap:10px">
+    <div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div>Analyzing your performance…</div>`:""}
+  ${st.plan?`<div class="ai-plan">
+    <div class="ai-plan-title">🤖 Your Personalized Study Plan</div>
+    <div class="ai-plan-text">${st.plan}</div>
+    <button class="btn-ghost mt16" id="refreshPlan" style="font-size:11px">↻ Refresh Plan</button>
+  </div>`:""}
+  </div>`;
+}
+
+// ─── HANDLERS ─────────────────────────────────────────────────────────────────
+function attachHandlers(stats,weak){
+  document.querySelectorAll("[data-nav]").forEach(el=>{
+    el.addEventListener("click",()=>{state.view=el.dataset.nav;render();});
+  });
+  const backSubj=document.getElementById("backSubj");
+  if(backSubj) backSubj.addEventListener("click",()=>{
+    clearInterval(timerInterval);
+    state.pr={subj:null,q:null,loading:false,selected:null,saInput:"",revealed:false,explanation:null,timeLeft:0,score:{c:0,t:0}};
+    render();
+  });
+  document.querySelectorAll("[data-pick]").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const subj=el.dataset.pick;
+      if(state.view==="practice"){state.pr.subj=subj;render();}
+      else{state.fc.subj=subj;genFlashcards(subj);}
+    });
+  });
+  const randSubj=document.getElementById("randSubj");
+  if(randSubj) randSubj.addEventListener("click",()=>{
+    state.pr.subj=SUBJECTS[Math.floor(Math.random()*SUBJECTS.length)].id;render();
+  });
+  const startQ=document.getElementById("startQ");
+  if(startQ) startQ.addEventListener("click",nextQuestion);
+  const nextQ=document.getElementById("nextQ");
+  if(nextQ) nextQ.addEventListener("click",nextQuestion);
+  document.querySelectorAll(".choice-btn").forEach(el=>{
+    el.addEventListener("click",()=>handleMC(el.dataset.choice));
+  });
+  const saInput=document.getElementById("saInput");
+  if(saInput){
+    saInput.addEventListener("input",e=>state.pr.saInput=e.target.value);
+    saInput.addEventListener("keydown",e=>{if(e.key==="Enter")handleSA();});
+    setTimeout(()=>saInput.focus(),50);
+  }
+  const submitSA=document.getElementById("submitSA");
+  if(submitSA) submitSA.addEventListener("click",handleSA);
+  const skipSA=document.getElementById("skipSA");
+  if(skipSA) skipSA.addEventListener("click",()=>{
+    clearInterval(timerInterval);
+    state.pr.revealed=true;state.pr.score.t++;
+    state.history.push({subject:state.pr.subj,correct:false,topic:state.pr.q?.topic});
+    render();fetchExplanation();
+  });
+  const showBonus=document.getElementById("showBonus");
+  if(showBonus) showBonus.addEventListener("click",()=>{
+    document.getElementById("bonusAns").style.display="block";showBonus.style.display="none";
+  });
+  const fcBack=document.getElementById("fcBack");
+  if(fcBack) fcBack.addEventListener("click",()=>{
+    state.fc={subj:null,cards:[],idx:0,flipped:false,loading:false,known:new Set()};render();
+  });
+  const flipCard=document.getElementById("flipCard");
+  if(flipCard) flipCard.addEventListener("click",()=>{state.fc.flipped=!state.fc.flipped;render();});
+  const fcRight=document.getElementById("fcRight");
+  if(fcRight) fcRight.addEventListener("click",()=>{
+    state.fc.known.add(state.fc.idx);state.fc.flipped=false;
+    state.fc.idx=(state.fc.idx+1)%state.fc.cards.length;render();
+  });
+  const fcWrong=document.getElementById("fcWrong");
+  if(fcWrong) fcWrong.addEventListener("click",()=>{
+    state.fc.known.delete(state.fc.idx);state.fc.flipped=false;
+    state.fc.idx=(state.fc.idx+1)%state.fc.cards.length;render();
+  });
+  const fcRegen=document.getElementById("fcRegen");
+  if(fcRegen) fcRegen.addEventListener("click",()=>genFlashcards(state.fc.subj));
+  document.querySelectorAll("[data-ls-subj]").forEach(el=>{
+    el.addEventListener("click",()=>{state.ls.subj=el.dataset.lsSubj;render();});
+  });
+  const goalInput=document.getElementById("goalInput");
+  if(goalInput) goalInput.addEventListener("input",e=>state.ls.goal=e.target.value);
+  const genLesson=document.getElementById("genLesson");
+  if(genLesson) genLesson.addEventListener("click",doGenLesson);
+  const newLesson=document.getElementById("newLesson");
+  if(newLesson) newLesson.addEventListener("click",()=>{state.ls.lesson=null;render();});
+  document.querySelectorAll("[data-show-pq]").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.getElementById(`pq-${el.dataset.showPq}`).style.display="block";el.style.display="none";
+    });
+  });
+  const getAIPlan=document.getElementById("getAIPlan");
+  if(getAIPlan) getAIPlan.addEventListener("click",()=>doGetPlan(stats,weak));
+  const refreshPlan=document.getElementById("refreshPlan");
+  if(refreshPlan) refreshPlan.addEventListener("click",()=>{state.st.plan=null;doGetPlan(stats,weak);});
+}
+
+// ─── PRACTICE LOGIC ───────────────────────────────────────────────────────────
+function nextQuestion(){
+  clearInterval(timerInterval);
+  const q = getQuestion(state.pr.subj);  // synchronous — instant!
+  state.pr = {...state.pr, q, loading:false, selected:null, saInput:"", revealed:false, explanation:null, timeLeft:0};
+  if(q && q.format==="Multiple Choice"){
+    state.pr.timeLeft=5;
+    render();
+    timerInterval=setInterval(()=>{
+      state.pr.timeLeft--;
+      if(state.pr.timeLeft<=0){clearInterval(timerInterval);if(state.pr.selected===null)handleMC("TIMEOUT");return;}
+      render();
+    },1000);
+  } else { render(); }
+}
+
+async function handleMC(choice){
+  if(state.pr.selected!==null) return;
+  clearInterval(timerInterval);
+  const q=state.pr.q,ok=(choice===q?.answer);
+  state.pr.selected=choice;
+  state.pr.score={c:state.pr.score.c+(ok?1:0),t:state.pr.score.t+1};
+  state.history.push({subject:state.pr.subj,correct:ok,topic:q?.topic});
+  render();fetchExplanation();
+}
+
+async function handleSA(){
+  const q=state.pr.q,given=state.pr.saInput.trim();
+  if(!given) return;
+  clearInterval(timerInterval);
+  const ok=checkSA(given,q?.answer);
+  state.pr.selected=given;
+  state.pr.score={c:state.pr.score.c+(ok?1:0),t:state.pr.score.t+1};
+  state.history.push({subject:state.pr.subj,correct:ok,topic:q?.topic});
+  render();fetchExplanation();
+}
+
+async function fetchExplanation(){
+  const q=state.pr.q;if(!q) return;
+  const exp=await callClaude(
+    "You are a Science Bowl coach. Explain answers concisely and clearly.",
+    `Question: ${q.question}\nCorrect answer: ${q.answer}\nExplain why in 2-3 sentences.`
+  );
+  state.pr.explanation=exp||"No explanation available.";
+  render();
+}
+
+async function genFlashcards(subj){
+  state.fc={subj,cards:[],idx:0,flipped:false,loading:true,known:new Set()};render();
+  const result=await callJSON(
+    "You are a Science Bowl flashcard generator.",
+    `Generate 10 Science Bowl flashcards for: ${subj}. Cover key facts, formulas, definitions, and laws.
+    Return JSON array: [{"front":"...","back":"...","topic":"..."},...]`
+  );
+  state.fc.cards=Array.isArray(result)?result:[];
+  state.fc.loading=false;render();
+}
+
+async function doGenLesson(){
+  state.ls.loading=true;state.ls.lesson=null;render();
+  const l=await callJSON(
+    "You are an expert Science Bowl tutor.",
+    `Create a Science Bowl lesson for: ${state.ls.subj}. Goal: "${state.ls.goal||"improve understanding"}"
+    Return JSON: {"title":"...","objective":"By the end of this lesson you will…",
+    "sections":[{"heading":"...","content":"...","keyTerms":["..."]}],
+    "practiceQuestions":[{"q":"...","a":"..."}],"studyTip":"..."}`
+  );
+  state.ls.lesson=l;state.ls.loading=false;render();
+}
+
+async function doGetPlan(stats,weak){
+  state.st.loading=true;state.st.plan=null;render();
+  const statsText=SUBJECTS.map(s=>{const st=stats[s.id];return `${s.id}: ${st.c}/${st.t} (${pct(st.c,st.t)??0}%)`;}).join(", ");
+  const plan=await callClaude(
+    "You are a Science Bowl coach.",
+    `Stats: ${statsText}\nWeak: ${weak.join(", ")||"none"}\nWrite a 3-point numbered study plan under 150 words.`
+  );
+  state.st.plan=plan;state.st.loading=false;render();
+}
+
+render();
+</script>
+</body>
+</html>
