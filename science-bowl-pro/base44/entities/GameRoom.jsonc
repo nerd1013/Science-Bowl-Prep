@@ -1,0 +1,132 @@
+{
+  "name": "GameRoom",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "host_email": {
+      "type": "string"
+    },
+    "host_name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string",
+      "enum": [
+        "Biology",
+        "Chemistry",
+        "Physics",
+        "Earth & Space",
+        "Math",
+        "Energy",
+        "All Subjects"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "in_progress",
+        "finished"
+      ],
+      "default": "waiting"
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "default": 0
+          },
+          "streak": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      }
+    },
+    "current_question_index": {
+      "type": "number",
+      "default": 0
+    },
+    "total_questions": {
+      "type": "number",
+      "default": 10
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "bonusQ": {
+            "type": "string"
+          },
+          "bonusA": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "player_email": {
+            "type": "string"
+          },
+          "question_index": {
+            "type": "number"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "time_ms": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "max_players": {
+      "type": "number",
+      "default": 8
+    },
+    "question_timer": {
+      "type": "number",
+      "default": 8
+    }
+  },
+  "required": [
+    "name",
+    "host_email",
+    "subject",
+    "status"
+  ]
+}
