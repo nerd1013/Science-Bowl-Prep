@@ -1,1 +1,3 @@
-A Website For Science Bowl Prep
+# Science-Bowl-Prep
+An application for studying Science Bowl
+
